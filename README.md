@@ -5,15 +5,6 @@ Persistent memory for AI agents with semantic search.
 
 ## Install (Claude Code)
 
-Go to [ensue-network.ai](ensue-network.ai) to generate your API key 
-
-In your terminal where you use Claude Code:
-```
-export ENSUE_API_KEY=<YourAPIKey>
-```
-```
-claude
-```
 ```
 /plugin marketplace add https://github.com/mutable-state-inc/ensue-skill
 ```
