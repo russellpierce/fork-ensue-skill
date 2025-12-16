@@ -6,6 +6,9 @@ Persistent memory for AI agents with semantic search.
 
 ```
 /plugin marketplace add https://github.com/mutable-state-inc/ensue-skill
+```
+
+```
 /plugin install ensue-memory
 ```
 
