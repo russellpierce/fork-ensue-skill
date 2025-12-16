@@ -1,6 +1,6 @@
 ---
 name: ensue-memory
-description: Persistent memory layer for AI agents via Ensue Memory Network API. Use when users ask to remember, recall, search memories, manage permissions, or subscribe to updates. Triggers on "remember this", "recall", "search memories", "update memory", "list keys", "share", "subscribe to", "permissions", or any persistent storage request.
+description: Persistent memory layer for AI agents via Ensue Memory Network API. Use when users ask to remember, recall, search memories, manage permissions, subscribe to updates, or ask what they can do with Ensue. Triggers on "remember this", "recall", "search memories", "update memory", "list keys", "share", "subscribe to", "permissions", "what can I do with ensue", or any persistent storage request.
 ---
 
 # Ensue Memory Network
@@ -9,25 +9,30 @@ Dynamic memory service accessed via curl.
 
 ## IMPORTANT: Do NOT use native MCP tools
 
-**Do NOT use:**
+**NEVER use these for ANY Ensue query (including capability questions):**
 - `listMcpResources`
-- `mcp__ensue-memory-local__*` tools
+- `listMcpTools`
+- `mcp__*` tools
 - Any native MCP tool calls
 
 **ONLY use curl** as described below. This ensures consistent behavior and dynamic schema discovery.
 
 ## Execution Order (MUST FOLLOW)
 
-**Step 1: Check for API key**
+**Step 1: Get API key**
+
+Check for the `ENSUE_API_KEY` environment variable:
 
 ```bash
-claude mcp get memory-network-ensue
+echo $ENSUE_API_KEY
 ```
 
-Extract the Bearer token from the headers. If not found, stop and tell user:
-> "Ensue Memory Network is not configured. To set up:
-> 1. Get an API key from https://www.ensue-network.ai/dashboard
-> 2. Run: `claude mcp add memory-network-ensue https://api.ensue-network.ai/ --header \"Authorization: Bearer YOUR_API_KEY\"`"
+If empty or not set, ask the user to provide their API key or set the environment variable:
+> "I need your Ensue API key to continue. You can either:
+> 1. Provide it now, or
+> 2. Set the environment variable: `export ENSUE_API_KEY=your_key`
+>
+> Get an API key from https://www.ensue-network.ai/dashboard"
 
 **Step 2: List available tools (REQUIRED before any tool call)**
 
@@ -53,8 +58,9 @@ Use the schema from Step 2 to construct correct arguments.
 
 ## Intent Mapping
 
-| User says | Tool to call |
-|-----------|--------------|
+| User says | Action |
+|-----------|--------|
+| "what can I do", "capabilities", "help" | Steps 1-2 only (summarize tools/list response) |
 | "remember...", "save...", "store..." | create_memory |
 | "what was...", "recall...", "get..." | get_memory or search_memories |
 | "search for...", "find..." | search_memories |
