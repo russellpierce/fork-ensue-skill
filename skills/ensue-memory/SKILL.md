@@ -36,18 +36,7 @@ Check if `ENSUE_API_KEY` is set WITHOUT revealing its value:
 [ -z "$ENSUE_API_KEY" ] && echo "ENSUE_API_KEY is not set" || echo "ENSUE_API_KEY is set"
 ```
 
-If not set, tell the user:
-> "The `ENSUE_API_KEY` environment variable is not set. Please set it before continuing:
->
-> ```bash
-> export ENSUE_API_KEY=your_key
-> ```
->
-> Get an API key from https://www.ensue-network.ai/dashboard
->
-> For security, I cannot accept the API key directly in this conversation."
-
-**Do not proceed until the environment variable is confirmed set.**
+If not set, tell the user to set `ENSUE_API_KEY` (get one at https://www.ensue-network.ai/dashboard). Do not proceed until confirmed.
 
 **Step 2: List available tools (REQUIRED before any tool call)**
 
@@ -73,62 +62,7 @@ Use the schema from Step 2 to construct correct arguments.
 
 ## Batch Operations
 
-When performing multiple operations (e.g., creating several memories, searching multiple keys, or any repetitive task), **write a bash script** instead of executing curl commands one at a time. This is more efficient and reduces latency.
-
-**Example: Creating multiple memories in batch**
-
-```bash
-#!/bin/bash
-# ENSUE_API_KEY must be set in the environment - never echo or log it
-[ -z "$ENSUE_API_KEY" ] && { echo "Error: ENSUE_API_KEY not set"; exit 1; }
-
-API_URL="https://api.ensue-network.ai/"
-
-# Array of memories to create
-declare -a memories=(
-  '{"key":"notes/meeting-jan","value":"Discussed Q1 roadmap"}'
-  '{"key":"notes/meeting-feb","value":"Budget review completed"}'
-  '{"key":"notes/meeting-mar","value":"Launched new feature"}'
-)
-
-for memory in "${memories[@]}"; do
-  key=$(echo "$memory" | jq -r '.key')
-  value=$(echo "$memory" | jq -r '.value')
-
-  curl -s -X POST "$API_URL" \
-    -H "Authorization: Bearer $ENSUE_API_KEY" \
-    -H "Content-Type: application/json" \
-    -d "{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"create_memory\",\"arguments\":{\"key\":\"$key\",\"value\":\"$value\"}},\"id\":1}"
-
-  echo "Created: $key"
-done
-```
-
-**Example: Batch search across multiple keys**
-
-```bash
-#!/bin/bash
-# ENSUE_API_KEY must be set in the environment - never echo or log it
-[ -z "$ENSUE_API_KEY" ] && { echo "Error: ENSUE_API_KEY not set"; exit 1; }
-
-API_URL="https://api.ensue-network.ai/"
-keys=("notes/meeting-jan" "notes/meeting-feb" "preferences/theme")
-
-for key in "${keys[@]}"; do
-  echo "=== $key ==="
-  curl -s -X POST "$API_URL" \
-    -H "Authorization: Bearer $ENSUE_API_KEY" \
-    -H "Content-Type: application/json" \
-    -d "{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"get_memory\",\"arguments\":{\"key\":\"$key\"}},\"id\":1}" | jq '.result'
-done
-```
-
-**When to use batch scripts:**
-- Creating 3+ memories at once
-- Deleting multiple keys
-- Searching across multiple categories
-- Migrating or backing up memories
-- Any repetitive API operation
+For 3+ similar operations, use a bash loop instead of individual commands. Keep it simple.
 
 ## Context Optimization
 
@@ -138,23 +72,12 @@ done
 
 **Do NOT** call `list_keys` or guess a search query. Be interactive:
 
-1. **ALWAYS ask the user first** - never assume or invent a query:
-   > "What would you like to find? I can search your memories by topic or meaning."
+1. **Ask the user first**: "What would you like to find?"
+2. **Wait for their response** before calling any search tool
+3. **Use `discover_memories`** with their query and **limit: 3**
+4. **Offer to show more** after displaying results
 
-2. **Wait for the user's response** before calling any search tool.
-
-3. **Only after the user specifies what they want**, use `discover_memories` with their query and **limit of 3**:
-   ```bash
-   curl -s -X POST https://api.ensue-network.ai/ \
-     -H "Authorization: Bearer $ENSUE_API_KEY" \
-     -H "Content-Type: application/json" \
-     -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"discover_memories","arguments":{"query":"<USER'S ACTUAL QUERY>","limit":3}},"id":1}'
-   ```
-
-4. **After showing results**, offer to continue:
-   > "I found 3 results. Let me know if you'd like to see more or search for something else."
-
-**CRITICAL: Never invent queries like "all memories" or "everything". You are a guide, not an assumer. Let the user drive the discovery.**
+**Never invent queries. You are a guide, not an assumer.**
 
 ### Prefer semantic search over listing
 
@@ -180,27 +103,20 @@ done
 | "who can access...", "permissions" | list_permissions |
 | "notify when...", "subscribe..." | subscribe_to_memory |
 
-## ⚠️ Destructive Operations Warning
+## ⚠️ Destructive Operations
 
-**Before executing operations marked with ⚠️, warn the user and request confirmation:**
+For `delete_memory` and `revoke_share`: show what will be affected, warn it's permanent, and get user confirmation before executing.
 
-### Delete Operations
-Before calling `delete_memory` (single or batch):
-1. **Show what will be deleted** - List the key(s) and count
-2. **Warn**: "This will permanently delete [N] memories. This cannot be undone."
-3. **Request confirmation**: Wait for user to confirm
+## Memory Quality
 
-Example:
-> ⚠️ Deleting 3 memories: `notes/jan`, `notes/feb`, `notes/mar`. This cannot be undone. Proceed?
+Memories serve as agentic context. They should be:
+- **Precise** - specific facts, not vague summaries
+- **Granular** - one concept per memory, not dumps
+- **Pointed** - actionable context that aids reasoning
+- **Non-limiting** - inform the agent, don't constrain it
 
-### Revoking User Access
-Before calling `revoke_share`:
-1. **Show who will lose access**: List affected user(s)
-2. **Warn about impact**: "This will immediately revoke access for [user(s)]"
-3. **Request confirmation**
-
-Example:
-> ⚠️ Revoking access for `alice@example.com` to `project/secrets`. They will immediately lose access. Proceed?
+Bad: "User likes clean code and good practices"
+Good: "User prefers early returns over nested conditionals"
 
 ## Key Naming
 
