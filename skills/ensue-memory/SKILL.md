@@ -136,37 +136,31 @@ done
 
 ### When users ask "what's on Ensue" / "show my memories" / "list keys"
 
-**Do NOT** call `list_keys` with a large limit. Instead:
+**Do NOT** call `list_keys`. Instead, go straight to semantic search:
 
-1. **Get a count first** using `list_keys` with `limit: 1`:
+1. **Ask what they're looking for:**
+   > "What would you like to find? I can search your memories by topic or meaning."
+
+2. **Use `discover_memories`** for semantic search with a **limit of 3**:
    ```bash
    curl -s -X POST https://api.ensue-network.ai/ \
      -H "Authorization: Bearer $ENSUE_API_KEY" \
      -H "Content-Type: application/json" \
-     -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"list_keys","arguments":{"limit":1}},"id":1}'
-   ```
-   The response includes a `count` field with the total number of keys.
-
-2. **Report the count and ask what they're looking for:**
-   > "You have [N] memories stored. What would you like to find? I can search by topic or meaning."
-
-3. **Use `discover_memories`** for semantic search instead of listing:
-   ```bash
-   curl -s -X POST https://api.ensue-network.ai/ \
-     -H "Authorization: Bearer $ENSUE_API_KEY" \
-     -H "Content-Type: application/json" \
-     -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"discover_memories","arguments":{"query":"<user intent>","limit":10}},"id":1}'
+     -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"discover_memories","arguments":{"query":"<user intent>","limit":3}},"id":1}'
    ```
 
-4. **Only list keys with small limits** (5-10) when the user explicitly needs to browse, and paginate if needed.
+3. **After showing results**, let the user know they can ask for more:
+   > "I found 3 results. Let me know if you'd like to see more or search for something else."
+
+4. **Only increase the limit** if the user explicitly requests more results.
 
 ### Prefer semantic search over listing
 
 | Instead of... | Do this... |
 |---------------|------------|
-| `list_keys` with limit 100 | `discover_memories` with relevant query |
-| Showing all keys | Report count, ask what they need |
-| Paginating through everything | Search for what's relevant |
+| `list_keys` | `discover_memories` with limit 3 |
+| Showing all keys | Ask what they need, then search |
+| Paginating through everything | Search for what's relevant, offer to show more |
 
 ## Intent Mapping
 
@@ -174,11 +168,11 @@ done
 |-----------|--------|
 | "what can I do", "capabilities", "help" | Steps 1-2 only (summarize tools/list response) |
 | "remember...", "save...", "store..." | create_memory |
-| "what was...", "recall...", "get..." | get_memory or discover_memories |
-| "search for...", "find..." | discover_memories or search_memories |
+| "what was...", "recall...", "get..." | get_memory (exact key) or discover_memories with limit 3 |
+| "search for...", "find..." | discover_memories with limit 3 (offer to show more) |
 | "update...", "change..." | update_memory |
 | "delete...", "remove..." | delete_memory ⚠️ |
-| "list keys", "show memories", "what's on ensue" | Count first, then ask intent (see Context Optimization) |
+| "list keys", "show memories", "what's on ensue" | Ask what they need, then discover_memories with limit 3 |
 | "share with...", "give access..." | share |
 | "revoke access...", "remove user..." | revoke_share ⚠️ |
 | "who can access...", "permissions" | list_permissions |
