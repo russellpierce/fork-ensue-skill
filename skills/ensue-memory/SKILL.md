@@ -7,49 +7,17 @@ description: Persistent memory layer for AI agents via Ensue Memory Network API.
 
 Dynamic memory service accessed via curl.
 
-## IMPORTANT: Do NOT use native MCP tools
+## Setup
 
-**NEVER use these for ANY Ensue query (including capability questions):**
-- `listMcpResources`
-- `listMcpTools`
-- `mcp__*` tools
-- Any native MCP tool calls
+Uses `$ENSUE_API_KEY` env var. If missing, user gets one at https://www.ensue-network.ai/dashboard
 
-**ONLY use curl** as described below. This ensures consistent behavior and dynamic schema discovery.
+## Security
 
-## Security: API Key Handling
+- **NEVER** echo, print, or log `$ENSUE_API_KEY`
+- **NEVER** accept the key inline from the user
+- **NEVER** interpolate the key in a way that exposes it
 
-**CRITICAL: Never expose the API key in the session.**
-
-- **NEVER** use `echo $ENSUE_API_KEY` or any command that prints the key
-- **NEVER** accept the API key inline from the user in the conversation
-- **NEVER** interpolate the key into commands in a way that could be logged
-- **ALWAYS** require the key to be set as an environment variable before proceeding
-
-## Execution Order (MUST FOLLOW)
-
-**Step 1: Verify API key is set**
-
-Check if `ENSUE_API_KEY` is set WITHOUT revealing its value:
-
-```bash
-[ -z "$ENSUE_API_KEY" ] && echo "ENSUE_API_KEY is not set" || echo "ENSUE_API_KEY is set"
-```
-
-If not set, tell the user to set `ENSUE_API_KEY` (get one at https://www.ensue-network.ai/dashboard). Do not proceed until confirmed.
-
-**Step 2: List available tools (REQUIRED before any tool call)**
-
-```bash
-curl -s -X POST https://api.ensue-network.ai/ \
-  -H "Authorization: Bearer $ENSUE_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","method":"tools/list","id":1}'
-```
-
-This returns tool names, descriptions, and input schemas. **Never skip this step.**
-
-**Step 3: Call the appropriate tool**
+## API Call
 
 ```bash
 curl -s -X POST https://api.ensue-network.ai/ \
@@ -57,8 +25,6 @@ curl -s -X POST https://api.ensue-network.ai/ \
   -H "Content-Type: application/json" \
   -d '{"jsonrpc":"2.0","method":"tools/call","params":{"name":"<tool_name>","arguments":{<args>}},"id":1}'
 ```
-
-Use the schema from Step 2 to construct correct arguments.
 
 ## Batch Operations
 
@@ -123,3 +89,20 @@ Good: "User prefers early returns over nested conditionals"
 Use hierarchical paths: `category/subcategory/name`
 
 Examples: `preferences/theme`, `project/api-keys`, `notes/meeting-2024-01`
+
+## Hypergraph Output
+
+**Keep it sparse.** When displaying hypergraph results:
+
+1. Show the raw graph structure with minimal formatting
+2. Do NOT summarize or analyze unless the user explicitly asks
+3. Avoid token-heavy tables, insights sections, or interpretations
+4. Just output the nodes and edges in compact form
+
+**Example output:**
+```
+HG: chess | 20 nodes | 17 edges
+Clusters: K(white wins), H(white losses), I(black losses), N(C50 wins)
+```
+
+Only provide analysis, stats, or recommendations when the user asks "what do you think" or similar.
