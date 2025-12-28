@@ -20,6 +20,7 @@ BATCH_THRESHOLD=10
 
 # Append to batch
 TIMESTAMP=$(date +%s)
+echo "$TIMESTAMP" > "/tmp/ensue-prompt-ts-${SESSION_ID}"
 echo "{\"ts\":$TIMESTAMP,\"msg\":$(echo "$USER_PROMPT" | jq -Rs '.[0:500]')}" >> "$BATCH_FILE"
 
 # Count lines

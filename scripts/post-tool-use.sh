@@ -17,6 +17,7 @@ BATCH_FILE="/tmp/ensue-batch-${SESSION_ID}.jsonl"
 
 # Append tool action to batch
 TIMESTAMP=$(date +%s)
-echo "{\"ts\":$TIMESTAMP,\"tool\":\"$TOOL_NAME\",\"input\":$TOOL_INPUT}" >> "$BATCH_FILE"
+PROMPT_TS=$(cat "/tmp/ensue-prompt-ts-${SESSION_ID}" 2>/dev/null || echo "0")
+echo "{\"ts\":$TIMESTAMP,\"prompt_ts\":$PROMPT_TS,\"tool\":\"$TOOL_NAME\",\"input\":$TOOL_INPUT}" >> "$BATCH_FILE"
 
 exit 0
