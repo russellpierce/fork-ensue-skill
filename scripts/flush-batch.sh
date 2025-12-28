@@ -40,8 +40,9 @@ RESPONSE=$(curl -s -X POST https://api.ensue-network.ai/ \
   -H "Content-Type: application/json" \
   -d "{\"jsonrpc\":\"2.0\",\"method\":\"tools/call\",\"params\":{\"name\":\"create_memory\",\"arguments\":{\"items\":$ITEMS}},\"id\":1}" 2>&1)
 
-# Check for errors
-HAS_ERROR=$(echo "$RESPONSE" | jq -r '.error // .result.isError // false' 2>/dev/null)
+# Check for errors (strip SSE "data: " prefix if present)
+JSON_RESPONSE=$(echo "$RESPONSE" | sed 's/^data: //')
+HAS_ERROR=$(echo "$JSON_RESPONSE" | jq -r '.error // .result.isError // false' 2>/dev/null)
 
 if [ "$HAS_ERROR" != "false" ] && [ "$HAS_ERROR" != "null" ] && [ -n "$HAS_ERROR" ]; then
   # Log error, keep batch file for retry
