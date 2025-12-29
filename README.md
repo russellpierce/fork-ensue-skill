@@ -1,7 +1,20 @@
 # Ensue Memory Network
 
-Persistent memory for AI agents with semantic search.
+**Get smarter alongside your AI.**
 
+Your intelligence shouldn't reset every conversation. Ensue is a persistent knowledge tree that grows with you - what you learn today enriches tomorrow's reasoning.
+
+## The Idea
+
+Every conversation with an LLM starts from zero. You explain context, re-establish preferences, repeat decisions you've already made. Your knowledge doesn't compound.
+
+Ensue changes that:
+
+- **Your knowledge persists** - Build a tree of intelligence that spans conversations
+- **Context carries forward** - Prior research, decisions, and insights inform new work
+- **You get smarter together** - The LLM learns your thinking patterns, not just facts
+
+Think of it as extended memory. When you ask about GPU inference, the LLM checks what you already know. When you make an architecture decision, it connects to past decisions in similar domains. Your accumulated knowledge becomes part of every conversation.
 
 ## Install (Claude Code)
 
@@ -34,6 +47,8 @@ export ENSUE_READONLY=true
 
 ```
 "remember my preferred stack is React + Postgres"
+"what do I know about caching strategies?"
+"check my research/distributed-systems/ notes"
 ```
 
 ## Links
