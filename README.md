@@ -54,3 +54,17 @@ export ENSUE_READONLY=true
 ## Links
 
 [Docs](https://www.ensue-network.ai/docs) · [Dashboard](https://www.ensue-network.ai/dashboard) · [Homepage](https://ensue.dev) · API: `https://api.ensue-network.ai`
+
+## Research Agent
+
+Build structured knowledge trees that persist across sessions.
+
+```
+"research GPU inference optimization for my ML server"
+"learn about distributed systems"
+"help me understand Kubernetes deeply"
+```
+
+The research agent autonomously explores topics, maps concepts and their relationships, identifies knowledge gaps, and writes everything to your Ensue memory. What you learn today compounds into tomorrow's reasoning.
+
+![Research Tree](assets/research-tree.png)
