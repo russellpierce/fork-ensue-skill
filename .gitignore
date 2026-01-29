@@ -2,3 +2,4 @@
 ensue-memory.zip
 scripts/pipx.pyz
 scripts/.pipx/
+skills/ensue-memory/scripts/*
