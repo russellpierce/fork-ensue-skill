@@ -93,6 +93,7 @@ from typing import Any
 import click
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
+from mcp.shared.exceptions import McpError
 from rich.console import Console
 from rich.json import JSON
 
@@ -233,7 +234,11 @@ def build_command(tool):
             for k, v in kwargs.items()
             if v is not None
         }
-        result = run_async(call_tool(url, token, tool["name"], args))
+        try:
+            result = run_async(call_tool(url, token, tool["name"], args))
+        except McpError as e:
+            click.echo(f"Error: {e}", err=True)
+            sys.exit(1)
         print_result(result)
 
     return click.Command(
