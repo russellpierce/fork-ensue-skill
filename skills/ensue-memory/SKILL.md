@@ -101,7 +101,7 @@ Each memory should be:
 
 ## Setup
 
-Uses `$ENSUE_API_KEY` env var. If missing, user gets one at https://www.ensue-network.ai/dashboard
+Uses `$ENSUE_API_KEY` env var or .ensue-key file. If missing, user gets a key at https://www.ensue-network.ai/dashboard
 
 ## Security
 
@@ -109,10 +109,9 @@ Uses `$ENSUE_API_KEY` env var. If missing, user gets one at https://www.ensue-ne
 - **NEVER** accept the key inline from the user
 - **NEVER** interpolate the key in a way that exposes it
 
-## API Call
+## Interacting with the memory system
 
-Use the wrapper CLI for all API calls. Set as executable before use. You can use `--help` for each command to get more details about how to use the CLI.  The CLI handles authentication and response parsing:
-
+Use the CLI to interact with the memory system. Set as executable before use. You can use `--help` to discover commands and usage for each command to get more details about how to use the CLI.  The CLI handles authentication and response parsing:
 
 ```bash
 ${CLAUDE_PLUGIN_ROOT:-.}/scripts/ensue-cli.py <method> '<json_args>'
@@ -131,14 +130,13 @@ ${CLAUDE_PLUGIN_ROOT:-.}/scripts/ensue-cli.py list_keys '{"limit":5}'
 
 For example:
 ```bash
-${CLAUDE_PLUGIN_ROOT:-.}/scripts/ensue-cli.py create_memory "$(cat <<'EOF'
-{
-  "items": [
-    {"key_name": "ns/key1", "value": "content1", "embed": true},
-    {"key_name": "ns/key2", "value": "content2", "embed": true}
-  ]
-}
+${CLAUDE_PLUGIN_ROOT:-.}/scripts/ensue-cli.py create_memory --items "$(cat <<'EOF'
+[
+  {"key_name": "ns/key1", "value": "content1", "description": "First item", "embed": true},
+  {"key_name": "ns/key2", "value": "content2", "description": "Second item", "embed": true}
+]
 EOF
+)"
 ```
 
 ## Context Optimization
