@@ -201,6 +201,18 @@ TYPE_MAP = {
 }
 
 
+def _find_mcp_errors(exc):
+    """Recursively extract McpError instances from (nested) exception groups."""
+    if isinstance(exc, McpError):
+        return [exc]
+    if isinstance(exc, BaseExceptionGroup):
+        errors = []
+        for sub in exc.exceptions:
+            errors.extend(_find_mcp_errors(sub))
+        return errors
+    return []
+
+
 def parse_arg(value, schema_type):
     """Parse a CLI argument, handling JSON for complex types."""
     if schema_type in ("array", "object") and isinstance(value, str):
@@ -236,10 +248,13 @@ def build_command(tool):
         }
         try:
             result = run_async(call_tool(url, token, tool["name"], args))
-        except* McpError as eg:
-            for err in eg.exceptions:
-                click.echo(f"Error (from Ensue MCP server): {err}", err=True)
-            sys.exit(1)
+        except BaseException as e:
+            mcp_errors = _find_mcp_errors(e)
+            if mcp_errors:
+                for err in mcp_errors:
+                    click.echo(f"Error (from Ensue MCP server): {err}", err=True)
+                sys.exit(1)
+            raise
         print_result(result)
 
     return click.Command(
