@@ -115,7 +115,10 @@ Uses `$ENSUE_API_KEY` env var or .ensue-key file. If missing, user gets a key at
 - The wrapped CLI is in your scripts directory as `ensue-cli`.
 - **Discover the jq path once:** Replace `{script_dir}` with the directory you've discovered `which jq || (chmod +x {script_dir}/ensue-jq.sh && echo "{script_dir}/.bin/jq")` ; remember to use the -r flag when using jq.
 
+You'll need to use these discovered pahts for calling the cli and jq.
+
 ## Interacting with the memory system
+
 Use the **wrapped CLI** to interact with the memory system. Set as executable before use. Use `--help` to discover commands and usage.
 Pipe to jq where relevant to select the information you need.  Remember to use the -r flag when interacting with jq.
 
@@ -125,7 +128,7 @@ Usage:
 ```bash
 ensue-cli list_keys --limit 5
 ensue-cli get_memory --key-names '["a"]' # get the key and all associated metadata
-ensue-cli get_memory --key-names '["ENTRY_POINT"]' | jq -r '.results[0].value' # get just the key contents
+ensue-cli get_memory --key-names '["ENTRY_POINT"]' | jq -r '.results[0].value' # get just the value from the key
 ```
 
 ## Batch Operations
