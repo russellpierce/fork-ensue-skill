@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+# Wrapper that ensures jq and pipx are available, then runs ensue-cli.py under pipx.
+# Bootstraps jq to scripts/.bin/jq if not available (for piping CLI output).
+
+SCRIPT_DIR=$([ -d "${CLAUDE_PLUGIN_ROOT}/scripts" ] && echo "${CLAUDE_PLUGIN_ROOT}/scripts" || [ -d "/mnt/skills/user/ensue-memory/scripts" ] && echo "/mnt/skills/user/ensue-memory/scripts" || [ -d "./scripts" ] && echo "./scripts" || echo "")
+
+# Ensure jq is available (system or sandboxed)
+SANDBOXED_JQ="$SCRIPT_DIR/.bin/jq"
+if ! command -v jq &>/dev/null && [ ! -x "$SANDBOXED_JQ" ]; then
+  bash "$SCRIPT_DIR/ensue-jq.sh" >/dev/null || exit 1
+fi
+
+# Ensure pipx zipapp exists
+PIPX_PYZ="$SCRIPT_DIR/pipx.pyz"
+if [ ! -f "$PIPX_PYZ" ]; then
+  echo "Downloading pipx standalone zipapp..." >&2
+  if ! curl -sLf "https://github.com/pypa/pipx/releases/latest/download/pipx.pyz" -o "$PIPX_PYZ"; then
+    echo "Failed to download pipx" >&2
+    exit 1
+  fi
+  chmod +x "$PIPX_PYZ"
+fi
+
+export PIPX_HOME="$SCRIPT_DIR/.pipx"
+exec python3 "$PIPX_PYZ" run "$SCRIPT_DIR/ensue-cli.py" "$@"

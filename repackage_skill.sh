@@ -14,12 +14,23 @@ fi
 # Create scripts directory in skill if it doesn't exist
 mkdir -p skills/ensue-memory/scripts
 
-# Copy ensue-api.sh into skill's scripts directory
-cp scripts/ensue-api.sh skills/ensue-memory/scripts/ensue-api.sh
-chmod +x skills/ensue-memory/scripts/ensue-api.sh
-echo "Copied ensue-api.sh to skills/ensue-memory/scripts/ and set execute permissions"
+# Copy CLI wrapper, Python CLI, ensue-jq, and api script
+cp scripts/ensue-cli skills/ensue-memory/scripts/ensue-cli
+chmod +x skills/ensue-memory/scripts/ensue-cli
 cp scripts/ensue-cli.py skills/ensue-memory/scripts/ensue-cli.py
 chmod +x skills/ensue-memory/scripts/ensue-cli.py
+cp scripts/ensue-jq.sh skills/ensue-memory/scripts/ensue-jq.sh
+chmod +x skills/ensue-memory/scripts/ensue-jq.sh
+cp scripts/ensue-api.sh skills/ensue-memory/scripts/ensue-api.sh
+chmod +x skills/ensue-memory/scripts/ensue-api.sh
+echo "Copied ensue-cli (wrapper), ensue-cli.py, ensue-jq.sh, ensue-api.sh to skills/ensue-memory/scripts/"
+
+# Bootstrap jq into skill's scripts/.bin so the zip contains it
+SKILL_ROOT="$(cd "skills/ensue-memory" && pwd)"
+CLAUDE_PLUGIN_ROOT="$SKILL_ROOT" bash skills/ensue-memory/scripts/ensue-jq.sh >/dev/null || true
+if [[ -x "skills/ensue-memory/scripts/.bin/jq" ]]; then
+    echo "Bootstrapped jq into skills/ensue-memory/scripts/.bin/"
+fi
 
 # check file presence before copying, set a flag for a warning if key file is missing
 if [ ! -f ".ensue-key" ]; then
@@ -39,7 +50,12 @@ cd ..
 
 echo ""
 echo "Cleaning up temporary copy..."
+rm -f skills/ensue-memory/scripts/ensue-cli
+rm -f skills/ensue-memory/scripts/ensue-cli.py
+rm -f skills/ensue-memory/scripts/ensue-jq.sh
 rm -f skills/ensue-memory/scripts/ensue-api.sh
+rm -f skills/ensue-memory/scripts/.bin/jq
+rmdir --ignore-fail-on-non-empty skills/ensue-memory/scripts/.bin 2>/dev/null || true
 rmdir --ignore-fail-on-non-empty skills/ensue-memory/scripts 2>/dev/null || true
 
 echo ""

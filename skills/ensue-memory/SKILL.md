@@ -109,22 +109,23 @@ Uses `$ENSUE_API_KEY` env var or .ensue-key file. If missing, user gets a key at
 - **NEVER** accept the key inline from the user
 - **NEVER** interpolate the key in a way that exposes it
 
+## Before Interacting with the memory system
+
+- **Discover the path to your scripts directory once:** `echo $([ -d "${CLAUDE_PLUGIN_ROOT}/scripts" ] && echo "${CLAUDE_PLUGIN_ROOT}/scripts" || [ -d "/mnt/skills/user/ensue-memory/scripts" ] && echo "/mnt/skills/user/ensue-memory/scripts" || [ -d "./scripts" ] && echo "./scripts" || echo "")`
+- The wrapped CLI is in your scripts directory as `ensue-cli`.
+- **Discover the jq path once:** Replace `{script_dir}` with the directory you've discovered `which jq || (chmod +x {script_dir}/ensue-jq.sh && echo "{script_dir}/.bin/jq")` ; remember to use the -r flag when using jq.
+
 ## Interacting with the memory system
+Use the **wrapped CLI** to interact with the memory system. Set as executable before use. Use `--help` to discover commands and usage.
+Pipe to jq where relevant to select the information you need.  Remember to use the -r flag when interacting with jq.
 
-Use the CLI to interact with the memory system. Set as executable before use. You can use `--help` to discover commands and usage for each command to get more details about how to use the CLI.  The CLI handles authentication and response parsing:
-
-Use the full path when calling the CLI. Discover it once `echo ${CLAUDE_PLUGIN_ROOT:-/mnt/skills/user/ensue-memory}/scripts/ensue-cli.py"`
-and make it executable.
+To run the CLI use that discovered path `ensue-cli <method> '<json_args>'`
 
 Usage:
 ```bash
-ensue-cli.py <method> '<json_args>'
-```
-
-Examples:
-```bash
-ensue-cli.py list_keys --limit 5
-ensue-cli.py get_memory --key-names '["a"]'
+ensue-cli list_keys --limit 5
+ensue-cli get_memory --key-names '["a"]' # get the key and all associated metadata
+ensue-cli get_memory --key-names '["ENTRY_POINT"]' | jq -r '.results[0].value' # get just the key contents
 ```
 
 ## Batch Operations
@@ -135,7 +136,7 @@ ensue-cli.py get_memory --key-names '["a"]'
 
 For example:
 ```bash
-${CLAUDE_PLUGIN_ROOT:-.}/scripts/ensue-cli.py create_memory --items "$(cat <<'EOF'
+ensue-cli create_memory --items "$(cat <<'EOF'
 [
   {"key_name": "ns/key1", "value": "content1", "description": "First item", "embed": true},
   {"key_name": "ns/key2", "value": "content2", "description": "Second item", "embed": true}
@@ -150,7 +151,7 @@ EOF
 
 ### Explicit vs Vague Requests
 
-**Explicit listing requests** → Execute directly with `list_keys '{"limit": 5}'` (limit 5):
+**Explicit listing requests** → Execute directly with `list_keys --limit 5` argument to CLI (limit 5):
 - "list recent" / "list keys" / "show recent keys" / "list my memories"
 - User knows what they want - don't make them clarify
 - After displaying results, mention: "Ask for more if you'd like to see additional keys"

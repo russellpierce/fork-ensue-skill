@@ -10,79 +10,15 @@
 """
 Ensue CLI - Command line interface for the Ensue Memory Network.
 
-This self-contained script uses PEP 723 inline metadata for dependency management.
-It auto-installs pipx if missing and uses it to manage dependencies.
-
-Run: ./ensue-cli.py --help
+Run via the ensue-cli wrapper (which ensures pipx and jq, then runs this under pipx).
+Run: ./ensue-cli --help
 """
 
+__version__ = "0.1.0"
+
 import os
-import subprocess
 import sys
 from pathlib import Path
-
-
-def ensure_pipx():
-    """Ensure pipx zipapp is available, download if missing."""
-    script_dir = Path(__file__).parent
-    pipx_pyz = script_dir / "pipx.pyz"
-
-    # Check if pipx.pyz exists locally
-    if pipx_pyz.exists():
-        return str(pipx_pyz)
-
-    # Download pipx standalone zipapp
-    print("Downloading pipx standalone zipapp...", file=sys.stderr)
-    try:
-        import urllib.request
-        url = "https://github.com/pypa/pipx/releases/latest/download/pipx.pyz"
-        urllib.request.urlretrieve(url, pipx_pyz)
-        pipx_pyz.chmod(0o755)
-        return str(pipx_pyz)
-    except Exception as e:
-        print(f"Failed to download pipx: {e}", file=sys.stderr)
-        print("Trying with curl...", file=sys.stderr)
-        try:
-            subprocess.run(
-                ["curl", "-LsSf", url, "-o", str(pipx_pyz)],
-                check=True,
-                capture_output=True
-            )
-            pipx_pyz.chmod(0o755)
-            return str(pipx_pyz)
-        except Exception as e2:
-            print(f"Failed to download pipx with curl: {e2}", file=sys.stderr)
-            sys.exit(1)
-
-
-def main_wrapper():
-    """Wrapper that ensures pipx is available and re-executes with it."""
-    # If we're already running via pipx, skip the wrapper
-    if os.environ.get("PIPX_RUNNING"):
-        return False
-
-    pipx_pyz = ensure_pipx()
-    script_path = Path(__file__).resolve()
-    script_dir = script_path.parent
-
-    # Re-execute with pipx run using isolated PIPX_HOME
-    env = os.environ.copy()
-    env["PIPX_RUNNING"] = "1"
-    env["PIPX_HOME"] = str(script_dir / ".pipx")
-
-    cmd = [sys.executable, pipx_pyz, "run", str(script_path)] + sys.argv[1:]
-
-    result = subprocess.run(cmd, env=env)
-    sys.exit(result.returncode)
-
-
-# Run wrapper first (will re-exec if needed)
-if not os.environ.get("PIPX_RUNNING"):
-    main_wrapper()
-
-# ============================================================================
-# Main script starts here (runs under pipx with dependencies available)
-# ============================================================================
 
 import asyncio
 import concurrent.futures
@@ -301,7 +237,7 @@ class MCPToolsCLI(click.Group):
 
 
 @click.group(cls=MCPToolsCLI)
-@click.version_option()
+@click.version_option(version=__version__)
 @click.option("--rich", "use_rich", is_flag=True, default=False, help="Enable rich terminal formatting.")
 def main(use_rich):
     """Ensue Memory CLI - A distributed memory network for AI agents.
